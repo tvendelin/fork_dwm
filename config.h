@@ -3,21 +3,9 @@
 /* found in Reddit: https://www.reddit.com/r/suckless/comments/c64pv8/controlling_audiobacklight_through_keys_in_dwm */
 #include <X11/XF86keysym.h>
 
-/* Macro for execvp call, side note: __VA_ARGS__ is the remaining argument (...) */
-#define EXEC(...) { .v = (const char *[]){ __VA_ARGS__, NULL } }
-
-/* Abstract audio manipulations */
-#define audio(source, ...) EXEC("amixer", "-q", "set", source, __VA_ARGS__)
-#define speaker(...)       audio("Master", __VA_ARGS__)
-#define mic(...)           audio("Capture", __VA_ARGS__)
-
-/* We don't need to type "amixer", "-D", ... anymore */
-#define volumeup     speaker("2%+")
-#define volumedown   speaker("2%-")
-#define volumetoggle speaker("toggle")
-
-/* Convenient macro to bind keys to a program */
-#define bindkey(key, ...) { .keysym = key, .func = spawn, .arg = __VA_ARGS__ }
+static const char *volumeup[] = {"amixer", "-c", "1", "-q", "set", "Master", "2%+", NULL};
+static const char *volumedown[] = {"amixer", "-c", "1", "-q", "set", "Master",  "2%-", NULL};
+static const char *toggle[] = {"amixer", "-c", "1", "-q", "set", "Master",  "toggle", NULL};
 
 /* end of Reddit steal, see extra keys[] */
 
@@ -82,25 +70,12 @@ static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont,
 static const char *termcmd[]  = { "st", NULL };
 
 static const Key keys[] = {
-    /* Reddit steal */
-    /* Default way to initialize Key */
-    { 0, XF86XK_AudioRaiseVolume, spawn, volumeup },
 
-    /* Since the first element is 0, we can omit it by skipping
-    *      * to the next variable */
-    { .keysym = XF86XK_AudioLowerVolume, spawn, volumedown },
-
-    /* Use of our convenient macro, short and concise */ 
-    bindkey(XF86XK_AudioMute, volumetoggle),
-
-    /* We don't need to define macro constant for the second argument */
-    bindkey(XF86XK_AudioMicMute, mic("toggle")),
-
-    /* If we need a modifier, append  .mod = MOD, as the last argument */
-    bindkey(XF86XK_AudioMute, mic("toggle"), .mod = ShiftMask),
-    /* end of Reddit steal */
 
 	/* modifier                     key        function        argument */
+    { 0,        XF86XK_AudioRaiseVolume,        spawn,        { .v = volumeup } },
+    { 0,        XF86XK_AudioLowerVolume,        spawn,        { .v = volumedown }},
+    { 0,               XF86XK_AudioMute,        spawn,        { .v = toggle }},
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
